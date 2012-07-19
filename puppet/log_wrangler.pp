@@ -30,4 +30,4 @@ resources { "firewall":
 
 include log_wrangler
 
-package { ['git', 'vim-enhanced']: ensure => installed }
+package { ['git', 'vim-enhanced', 'nc']: ensure => installed }
