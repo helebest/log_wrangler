@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# try to stop it the nice way, but chances are this will fail since the erlang
+# cookie required for communication with the service changed, we'll try anyways
+if [ `rpm -qa|grep rabbitmq-server|wc -l` == 1 ]; then
+    echo "we found rabbitmq-server package, try to stop nicely"
+    /sbin/service rabbitmq-server stop
+else
+    echo "no rabbitmq-server package"
+fi
+
+# if rabbitmq is still running
+if [ `ps -u rabbitmq|grep beam|wc -l` -eq 1 ]; then 
+    # send signal to kill nicely
+    echo "kill rabbitmq"
+    killall -u rabbitmq -q
+    
+    # wait a moment
+    COUNT=0
+    while [ "$COUNT" -lt "10" ]; do
+        echo "wait for rabbitmq shutdown"
+        sleep 1
+        if [ `ps -u rabbitmq|grep beam|wc -l` -eq 1 ]; then 
+            break
+        fi
+        COUNT=$((COUNT+1))
+    done
+    
+    # kill it hard
+    echo "kill -9 rabbitmq"
+    killall -9 -u rabbitmq -q
+    
+    # wait a second
+    COUNT=0
+    while [ "$COUNT" -lt "10" ]; do
+        echo "wait for rabbitmq shutdown"
+        sleep 1
+        if [ `ps -u rabbitmq|grep beam|wc -l` -eq 0 ]; then 
+            echo "rabbitmq is shut down"
+            break
+        fi
+        COUNT=$((COUNT+1))
+    done
+else
+    echo "rabbitmq stopped nicely"
+    /sbin/service rabbitmq-server start
+    exit 0;
+fi
+
+# if we are still running
+if [ `ps -u rabbitmq|grep beam|wc -l` -eq 1 ]; then 
+    echo "rabbitmq failed to stop"
+else
+    echo "rabbitmq killed"
+    /sbin/service rabbitmq-server start
+    exit 0;
+fi

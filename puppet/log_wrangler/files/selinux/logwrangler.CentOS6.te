@@ -1,0 +1,49 @@
+module logwrangler 1.1;
+
+require {
+	type consolekit_t;
+	type device_t;
+	type groupadd_t;
+	type home_root_t;
+	type httpd_t;
+	type initrc_tmp_t;
+	type nrpe_t;
+	type nscd_t;
+	type port_t;
+	type random_device_t;
+	type sshd_t;
+	type tmpfs_t;
+	type user_home_dir_t;
+	type usr_t;
+	class capability dac_override;
+	class chr_file { getattr read open };
+	class dir { search getattr };
+	class file { write ioctl read open getattr };
+	class tcp_socket name_connect;
+}
+
+#============= consolekit_t ==============
+allow consolekit_t device_t:chr_file read;
+
+#============= httpd_t ==============
+allow httpd_t device_t:chr_file { read open };
+allow httpd_t port_t:tcp_socket name_connect;
+
+#============= nrpe_t ==============
+allow nrpe_t device_t:chr_file { read getattr open };
+allow nrpe_t home_root_t:dir search;
+allow nrpe_t random_device_t:chr_file { read getattr open };
+allow nrpe_t self:capability dac_override;
+allow nrpe_t tmpfs_t:dir { getattr search };
+allow nrpe_t tmpfs_t:file { ioctl read getattr open };
+allow nrpe_t user_home_dir_t:dir getattr;
+allow nrpe_t usr_t:file { getattr read ioctl open };
+
+#============= sshd_t ==============
+allow sshd_t device_t:chr_file { read getattr open };
+
+#============= groupadd_t ==============
+allow groupadd_t initrc_tmp_t:file { read write };
+
+#============= nscd_t ==============
+allow nscd_t initrc_tmp_t:file { read write };

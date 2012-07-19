@@ -1,0 +1,16 @@
+[
+  {kernel, [
+      {inet_dist_listen_min, 58000}, 
+      {inet_dist_listen_max, 62000} 
+    ] 
+  }, 
+  {rabbit, [
+  <% if rabbitmq_cluster_nodes.length > 1 -%>
+    {cluster_nodes, [
+    <% rabbitmq_cluster_nodes.flatten.each_with_index do |item,i| -%>
+      '<%= item %>'<% if i != (rabbitmq_cluster_nodes.size - 1) then %>,<% end %>
+    <% end -%>
+    ]}
+  <% end -%>
+  ]}
+].

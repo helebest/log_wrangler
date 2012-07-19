@@ -1,0 +1,9 @@
+<Location /kibana>
+    Order deny,allow
+    Deny from all
+<% allowed_networks.flatten.each do |name| -%>
+    Allow from <%= name %>
+<% end -%>
+    Allow from 127.0.0.1
+    Allow from ::1
+</Location>

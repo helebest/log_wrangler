@@ -1,0 +1,7 @@
+/var/log/elasticsearch/<%= es_cluster_name %>.log {
+    daily
+    rotate 30
+    copytruncate
+    dateext
+    compress
+}

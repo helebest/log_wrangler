@@ -1,0 +1,71 @@
+input {
+  # watch the mail log
+  #file {
+  #  type => "maillog"
+  #  path => [ "/var/log/maillog" ]
+  #}
+
+  tcp {
+    host => "0.0.0.0"
+    port => "6999"
+    type => "maillog"
+  }
+}
+
+filter {
+#  grep {
+#    type => "all"
+#    match => [ "@message", "^.* exim" ] 
+#    add_field => [ "service", "exim" ] 
+#  }
+#
+#  grep {
+#    type => "all"
+#    match => [ "@message", "^.* dovecot" ] 
+#    add_field => [ "service", "dovecot" ] 
+#  }
+
+  grok {
+    type => "maillog"
+    pattern => "%{TIMESTAMP_ISO8601:timestamp} %{WORD:host} %{SYSLOGPROG:service}: %{GREEDYDATA:message}"
+  }
+  mutate {
+    type => "maillog"
+    # replace the timestamp, so that historical logs get imported into the proper indices
+    replace => ["@timestamp", "%{timestamp}"]
+    # replace the message sans-timestamp/host/service
+    replace => ["@message", "%{message}"]
+  }
+  # remove the old fields, since they are just dupes
+  mutate {
+    type => "maillog"
+    remove => ["timestamp"]
+    remove => ["message"]
+  }
+
+  multiline {
+    type => "maillog"
+    pattern => "^\[.*"
+    what => "previous"
+  }
+}
+
+output {
+  # Emit events to stdout for easy debugging of what is going through
+  # logstash.
+  stdout { 
+    debug => false
+  }
+
+  # This will use elasticsearch to store your logs.
+  # The 'embedded' option will cause logstash to run the elasticsearch
+  # server in the same process, so you don't have to worry about
+  # how to download, configure, or run elasticsearch!
+
+  # use the elasticsearch rabbitmq river
+  elasticsearch_river {
+    debug => true
+    amqp_host => "127.0.0.1"
+    es_host => "127.0.0.1"
+  }
+}
